@@ -1,0 +1,8 @@
+yt-dlp~=2025.6.9
+streamlit~=1.45.1
+requests~=2.32.3
+nicegui~=2.18.0
+dearpygui~=2.0.0
+httpx~=0.28.1
+opencv-python~=4.11.0.86
+pillow~=11.0.0
