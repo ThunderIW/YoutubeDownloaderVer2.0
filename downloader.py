@@ -49,17 +49,49 @@ class downloader:
         return [(label, data['format_id']) for label, data in sorted(res_map.items())]
 
 
-
+    def get_channel_avatar(self):
+        channel_avatar_pic=""
+        ydl_opts={
+            'quiet': True,
+            'extract_flat': True,
+            'skip_download': True
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info=ydl.extract_info(self.channel_url,download=False)
+            thumbnails=info.get('thumbnails')
+            channels_official_url=info.get('uploader_url')
+            for thumb in thumbnails:
+                if thumb.get('id')=='avatar_uncropped':
+                    channel_avatar_pic=thumb.get('url')
+        return channel_avatar_pic,channels_official_url
 
     def download_video(self, format_id,folder_path):
         if not folder_path:
-            folder_path = Path(r"D:\Python Project\YoutubeDownloader_Ver2.0\videos")
+            folder_path = Path("videos")
         output_template=os.path.join(folder_path, '%(title)s.%(ext)s') if folder_path else '%(title)s.%(ext)s'
         ydl_opts = {
             'format': f'{format_id}+bestaudio',
             'merge_output_format': 'mp4',
             'outtmpl': output_template,
             'quiet': False
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([self.youtube_link])
+
+
+    def download_audio(self,folder_path):
+        if not folder_path:
+            folder_path = Path("audios")
+        output_template = os.path.join(folder_path, '%(title)s.%(ext)s') if folder_path else '%(title)s.%(ext)s'
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': output_template,
+            'quiet': False,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([self.youtube_link])
@@ -73,8 +105,9 @@ class downloader:
             '''
             for key,value in info.items():
                 print(f"key:{key}")
-                
             '''
+                
+
 
             self.channel_url= info.get('channel_url', None)
             self.category= info.get('categories', None)
