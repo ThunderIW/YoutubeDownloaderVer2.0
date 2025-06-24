@@ -61,7 +61,8 @@ class downloader:
             thumbnails=info.get('thumbnails')
             channels_official_url=info.get('uploader_url')
             for thumb in thumbnails:
-                if thumb.get('id')=='avatar_uncropped':
+                print(thumb)
+                if thumb.get('resolution')=='900x900':
                     channel_avatar_pic=thumb.get('url')
         return channel_avatar_pic,channels_official_url
 
