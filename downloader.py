@@ -61,12 +61,13 @@ class downloader:
             thumbnails=info.get('thumbnails')
             channels_official_url=info.get('uploader_url')
             for thumb in thumbnails:
-                print(thumb)
+                #print(thumb)
                 if thumb.get('resolution')=='900x900':
                     channel_avatar_pic=thumb.get('url')
+
         return channel_avatar_pic,channels_official_url
 
-    def download_video(self, format_id,folder_path):
+    def download_video(self, format_id,folder_path,progress_callback=None):
         if not folder_path:
             folder_path = Path("videos")
         output_template=os.path.join(folder_path, '%(title)s.%(ext)s') if folder_path else '%(title)s.%(ext)s'
@@ -76,11 +77,13 @@ class downloader:
             'outtmpl': output_template,
             'quiet': False
         }
+        if progress_callback:
+            ydl_opts['progress_hooks'] = [progress_callback]
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([self.youtube_link])
 
 
-    def download_audio(self,folder_path):
+    def download_audio(self,folder_path,progress_callback=None):
         if not folder_path:
             folder_path = Path("audios")
         output_template = os.path.join(folder_path, '%(title)s.%(ext)s') if folder_path else '%(title)s.%(ext)s'
@@ -94,6 +97,8 @@ class downloader:
                 'preferredquality': '192',
             }],
         }
+        if progress_callback:
+            ydl_opts['progress_hooks'] = [progress_callback]
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([self.youtube_link])
 

@@ -9,20 +9,64 @@ from nicegui.functions.download import download
 
 from downloader import downloader
 import streamlit_shadcn_ui as ui
+
+def download_video_with_progress(youtube_to_find, chosen_res):
+    progress_bar_video = st.progress(0)
+    progress_text_video = st.empty()
+    def progress_hook(d):
+        if d['status'] == 'downloading':
+            total = d.get('total_bytes') or d.get('total_bytes_estimate')
+            downloaded = d.get('downloaded_bytes', 0)
+            if total:
+                percent = int(downloaded / total * 100)
+                progress_bar_video.progress(percent)
+                progress_text_video.text(f"Downloading video: {percent}%")
+        elif d['status'] == 'finished':
+            progress_bar_video.progress(100)
+            progress_text_video.text("Progress: 100% - Download finished!")
+
+    youtube_to_find.download_video(str(chosen_res), folder_path=None, progress_callback=progress_hook)
+    progress_bar_video.empty()
+
+
+
+def download_audio_with_progress(youtube_to_find):
+    progress_bar_audio = st.progress(0)
+    progress_text_audio = st.empty()
+    def progress_hook(d):
+        if d['status'] == 'downloading':
+            total = d.get('total_bytes') or d.get('total_bytes_estimate')
+            downloaded = d.get('downloaded_bytes', 0)
+            if total:
+                percent = int(downloaded / total * 100)
+                progress_bar_audio.progress(percent)
+                progress_text_audio.text(f"Downloading audio: {percent}%")
+        elif d['status'] == 'finished':
+            progress_bar_audio.progress(100)
+            progress_text_audio.text("Progress: 100% - Download finished!")
+    youtube_to_find.download_audio(folder_path=None, progress_callback=progress_hook)
+    progress_bar_audio.empty()
+
+
+
 def main():
     ytDlp = {
     'quiet': True,
     'skip_download': True
 }
 
+
+
+
+
+
     st.header("YouTube Downloader 🎬")
-    youtube_link = st.text_input("Enter the YouTube video link:")
+    youtube_link = st.text_input("Enter the YouTube video link:",key='youtube_link_input')
     if youtube_link:
         available_res = [""]
         youtube_to_find= downloader(youtube_link)
         channel_url, title, category, thumbnail, media_type, uploader = youtube_to_find.get_info(yld_opts=ytDlp)
         channel_profile_avatar_link,official_link=youtube_to_find.get_channel_avatar()
-        print(channel_profile_avatar_link)
         res= youtube_to_find.get_best_avc_formats_by_resolution()
         for resolution, format_id in res:
             available_res.append(f'{resolution} - Format ID: {format_id}')
@@ -49,7 +93,8 @@ def main():
             if download_button_video:
                 st.subheader("Available Resolutions and Formats")
                 chosen_res=chosen_resolution.split(" - ")[1].split(": ")[1]
-                youtube_to_find.download_video(str(chosen_res), folder_path=None)
+                download_video_with_progress(youtube_to_find, str(chosen_res))
+                #youtube_to_find.download_video(str(chosen_res), folder_path=None)
                 st.success(f"Video '{title}' downloaded successfully to application")
 
 
@@ -64,24 +109,27 @@ def main():
                         print("found")
                         video_path = os.path.join('videos', filename)
                         found_file = os.path.join('videos', filename)
-
-                    with open(found_file, 'rb') as f:
+                    if found_file and os.path.exists(found_file):
                         with open(found_file, 'rb') as f:
-                            video_bytes = f.read()
+                            with open(found_file, 'rb') as f:
+                                video_bytes = f.read()
 
-                    st.download_button(label=f"Download {title} (mp4)",
+                        st.download_button(label=f"⬇️ Download {title} (🎬 video)",
                                        data=video_bytes,
                                        file_name=f"{title}.mp4",
-                                       mime="video/mp4")
+                                       mime="video/mp4",key='download_video_button',type='primary')
 
-                    time.sleep(2)
-                    os.remove(found_file)
+                        time.sleep(2)
+                        os.remove(found_file)
+
+
 
         if  download_type =='Audio 🎶':
             download_button_audio = ui.button("Download Audio", key="download_button_audio", class_name="bg-green-800 text-white")
             if download_button_audio:
                 #chosen_res = chosen_resolution.split(" - ")[1].split(": ")[1]
-                youtube_to_find.download_audio(folder_path=None)
+                download_audio_with_progress(youtube_to_find)
+                #youtube_to_find.download_audio(folder_path=None)
                 st.success(f"Audio '{title}' downloaded successfully to application")
 
                 found_file = None
@@ -95,17 +143,21 @@ def main():
                         print("found")
                         audio_path = os.path.join('audios', filename)
                         found_file = os.path.join('audios', filename)
+                    if found_file and os.path.exists(found_file):
 
-                    with open(found_file, 'rb') as f:
-                        audio_bytes = f.read()
+                        with open(found_file, 'rb') as f:
+                            audio_bytes = f.read()
 
-                    st.download_button(label=f"Download {title} (audio) ",
+                        st.download_button(label=f"⬇️Download {title} (🎶 audio) ",
                                        data=audio_bytes,
                                        file_name=f"{title}.mp3",
-                                       mime="audio/mp3")
+                                       mime="audio/mp3",key='download_audio_button',type='primary')
 
-                    time.sleep(2)
-                    os.remove(found_file)
+                        time.sleep(2)
+                        os.remove(found_file)
+
+
+
 
 
 
